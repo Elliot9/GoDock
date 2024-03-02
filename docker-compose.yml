@@ -1,0 +1,55 @@
+version: "3"
+
+services:
+  db:
+    container_name: db
+    build:
+      context: dockerfiles/mysql
+    environment:
+      - "MYSQL_DATABASE=dev"
+      - "MYSQL_USER=root"
+      - "MYSQL_PASSWORD=root"
+      - "MYSQL_ROOT_PASSWORD=root"
+      - "TZ=Asia/Taipei"
+    ports:
+      - '3306:3306'
+    command: [ "--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0", "--general-log=1", "--general-log-file=/var/log/mysql/general-log.log", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci" ]
+    volumes:
+      - ../log/mysql:/var/log/mysql/
+    networks:
+      dev:
+        aliases:
+          - mysql
+  phpmyadmin:
+      container_name: phpmyadmin
+      build:
+        context: dockerfiles/phpmyadmin
+      ports:
+        - 8090:80
+      environment:
+        - PMA_HOST=db
+        - PMA_PORT=3306
+        - TZ=Asia/Taipei
+      networks:
+        - dev
+  redis:
+      container_name: redis
+      build:
+        context: dockerfiles/redis
+      ports:
+        - "6379:6379"
+      environment:
+        - "TZ=Asia/Taipei"
+      networks:
+        - dev
+  grafana:
+      container_name: grafana
+      build:
+        context: dockerfiles/grafana
+      ports:
+        - "3002:3000"
+      networks:
+        - dev
+networks:
+  dev:
+    driver: bridge
